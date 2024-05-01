@@ -1,15 +1,13 @@
 # This is the essentially package that holds the project together. the routes and relevant configuration information is held in here.
 import os
 
-from flask import Flask
-from flask import url_for
-from flask import request
-from flask import render_template
-from flask import redirect
-from flask import jsonify
+from flask import Flask, url_for, request, render_template, redirect, jsonify
 from markupsafe import escape
+
 #import grabInfo
 #import addInfo
+
+
 
 id_number = "000"
 
@@ -117,8 +115,7 @@ def create_app(test_config=None):
         return render_template("service_portal/schedule.html", page_name=page_name)
 
     @app.route('/new/ticket', methods=['GET','POST'])
-
-    def new_ticket(id_number=id_number, page_name="New Ticket {id_number}"):
+    def new_ticket(id_number=id_number, page_name=f"New Ticket {id_number}"):
 
         # will need to save the DB information from the webpage
         # probably using an API request template once the submit button was hit.
@@ -163,7 +160,7 @@ def create_app(test_config=None):
         # Process form data and save the ticket to the database
         # Increment the current page number by one
             id_number = str(int(id_number) + 1)
-        return render_template("new/ticket.html", page_name=page_name, id_number=id_number)
+        return render_template("new/create_ticket.html", page_name=page_name, id_number=id_number)
 
     
     @app.route('/view/ticket', methods=['GET'])
@@ -176,7 +173,7 @@ def create_app(test_config=None):
     
 
     @app.route('/settings')
-    def setting(page_name="Settings"):
+    def settings(page_name="Settings"):
         return render_template("/settings/settings.html", page_name=page_name)
     
     @app.route('/view/kb')
