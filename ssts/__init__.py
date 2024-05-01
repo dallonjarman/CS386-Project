@@ -1,6 +1,8 @@
 # This is the essentially package that holds the project together.
 # The routes and relevant configuration information is held in here.
 import os
+
+import pymongo
 from flask import Flask, url_for, request, render_template, redirect, jsonify, session
 import uuid
 from markupsafe import escape
@@ -17,11 +19,11 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        SECRET_KEY=os.environ.get('SECRET_KEY'),
-        DATABASE=os.path.join(app.instance_path, 'ssts.mongodb'),
-        SESSION_PERMANENT=os.environ.get('SESSION_PERMANENT'),
-        SESSION_TYPE=os.environ.get('SESSION_TYPE'),
+        SECRET_KEY="4d2a6ccee35ad5d8cc7f64b521b2e4200e1ce2d5e019ba56010e6bcb6769b00e",
+        DATABASE="mongodb+srv://root:o3JSG2Y9ciqU9G8P@cluster0.zusbpwn.mongodb.net/?retryWrites=true&w=majority",
     )
+    pymongo.MongoClient(
+        "mongodb+srv://root:o3JSG2Y9ciqU9G8P@cluster0.zusbpwn.mongodb.net/?retryWrites=true&w=majority")
     # pull out the ID number of ticket
     # check database for last number used, if any
     try:

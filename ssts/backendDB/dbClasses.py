@@ -18,7 +18,7 @@ class Database:
     # create init function
     def __init__(self):
         # uri
-        self.uri = os.environ.get("DATABASE_URI")
+        self.uri = "mongodb+srv://root:o3JSG2Y9ciqU9G8P@cluster0.zusbpwn.mongodb.net/?retryWrites=true&w=majority"
         # add client to database class
         self.client = MongoClient(self.uri, tlsCAFile=certifi.where())
         # add ssts database to database class
