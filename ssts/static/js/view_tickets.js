@@ -16,7 +16,8 @@ editButtons.forEach((button) => {
     // Show the edit modal
     editModal.style.display = 'block';
 
-
+    // Set the incident id to the modal's data attribute
+    editModal.setAttribute('data-id', incidentId);
 
 	let incidentName = button.getAttribute('data-name');
 	let incidentDescription = button.getAttribute('data-description');
