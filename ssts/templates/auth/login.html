@@ -4,23 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{page_name}}</title>
-    <link rel="stylesheet" href="../static/css/login.css">
+    <link rel="stylesheet" href="../../static/css/login.css">
 </head>
 <body>
 
-    {% block contnet %}
+    {% block content %}
     
     <div class="container">
         <h1>Log in</h1>
-        
+
         <form action="#", method="POST">
             <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" placeholder="youraddress@email.com">
+            <input type="email" id="email" name="email" placeholder="Example@ssts.app">
 
             <label for="password">Password</label>
             <input type="password" id="password" name="password" placeholder="Enter your password">
             <button type="submit">Login to Continue</button>
-            
+
             <p>Don't have an account? <a href="/signup">Sign up</a></p>
         </form>
     </div>

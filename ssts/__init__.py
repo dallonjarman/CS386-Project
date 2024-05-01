@@ -1,47 +1,37 @@
-# This is the essentially package that holds the project together. the routes and relevant configuration information is held in here.
+# This is the essentially package that holds the project together.
+# The routes and relevant configuration information is held in here.
 import os
-
-from flask import Flask, url_for, request, render_template, redirect, jsonify
+from flask import Flask, url_for, request, render_template, redirect, jsonify, session
+import uuid
 from markupsafe import escape
+from ssts.backendDB import dbClasses as db
+from werkzeug.security import generate_password_hash, check_password_hash
+import hashlib
 
-#import grabInfo
-#import addInfo
+WORKERS = db.WorkerCollection()
+TICKETS = db.TicketCollection()
+IDS = db.ID()
 
-
-
-id_number = "000"
-
-# Sample incident data
-incidents = [
-    {'id': '001', 'title': 'Incident 1', 'description': 'This is incident 1 and I wonder if I will wreap text correctly or not???', 'worker': 'Dallon', 'device': 'Laptop', 'client': 'John Doe', 'team': 'IT'},
-    {'id': '002', 'title': 'Incident 2', 'description': 'This is incident 2', 'worker': 'Dallon', 'device': 'Laptop', 'client': 'John Doe', 'team': 'IT'},
-    {'id': '003', 'title': 'Incident 3', 'description': 'This is incident 2', 'worker': 'Dallon', 'device': 'Laptop', 'client': 'John Doe', 'team': 'IT'},
-    {'id': '004', 'title': 'Incident 4', 'description': 'This is incident 2', 'worker': 'Dallon', 'device': 'Laptop', 'client': 'John Doe', 'team': 'IT'},
-]
-
-calls = [
-    {'id': '001', 'title': 'Call 1', 'description': 'This is call 1', 'worker': 'Dallon', 'device': 'Laptop', 'client': 'John Doe', 'team': 'IT'},
-    {'id': '002', 'title': 'Call 2', 'description': 'This is call 2', 'worker': 'Dallon', 'device': 'Laptop', 'client': 'John Doe', 'team': 'IT'},
-    {'id': '003', 'title': 'Call 3', 'description': 'This is call 3', 'worker': 'Dallon', 'device': 'Laptop', 'client': 'John Doe', 'team': 'IT'},
-]
 
 def create_app(test_config=None):
-    global id_number
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        SECRET_KEY='dev',
+        SECRET_KEY=os.environ.get('SECRET_KEY'),
         DATABASE=os.path.join(app.instance_path, 'ssts.mongodb'),
+        SESSION_PERMANENT=os.environ.get('SESSION_PERMANENT'),
+        SESSION_TYPE=os.environ.get('SESSION_TYPE'),
     )
     # pull out the ID number of ticket
     # check database for last number used, if any
     try:
+        id_number = IDS.get_current_id('tickets')
         # do database stuff we expect to work here
         # like pulling last ID number
         # if this errors, then move to except
-        raise ValueError()
+
         print("working database stuff here")
-        
+
         # use the get_ticket_collection function
         # if empty, throw error
         # otherwise, get the last ticket from the list.
@@ -63,126 +53,175 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-
     # all application routes
     @app.route('/')
     def homepage(page_name="Homepage"):
-        return render_template("base.html", page_name=page_name)
+        if 'name' not in session:
+            return redirect('/login')
+        username = session['name']
+        return render_template("base.html", page_name=page_name, username=username)
 
-    @app.route('/login', methods=['GET','POST'])
+    @app.route('/login', methods=['GET', 'POST'])
     def agent_login_page(page_name="Agent Login"):
 
         if request.method == 'POST':
             email = str(request.form.get('email'))
             password = str(request.form.get('password'))
-            
-            if (email == "testing@ssts.app") & (password == "password"):
+            password = password.encode('utf-8')
+            password = hashlib.sha256(password).hexdigest()
+
+            found_user = WORKERS.get_worker(email)
+
+            if (found_user.email == email) and (found_user.password == password):
+                session['name'] = found_user.name
                 return redirect('/')
             else:
+                print("User not found")
                 return redirect('/login')
 
         return render_template("auth/login.html", page_name=page_name)
-    
-    @app.route('/signup', methods=['GET','POST'])
-    def agent_signup_page(page_name="Agent Signup"):
+
+    @app.route('/logout')
+    def logout():
+        session.pop('name', None)
+        return redirect('/login')
+
+    @app.route('/signup', methods=['GET', 'POST'])
+    def agent_signup_page(page_name="Agent Signup", self=None):
 
         if request.method == 'POST':
-            username = str( request.form.get('username') )
-            firstname = str( request.form.get('firstname') )
-            lastname = str( request.form.get('lastname') )
-            phone = str( request.form.get('phone') )
-            email = str( request.form.get('email') )
-            password = str( request.form.get('password') )
-            password1 = str( request.form.get('password1') )
+            firstname = str(request.form.get('firstname')).capitalize()
+            lastname = str(request.form.get('lastname')).capitalize()
+            email = str(request.form.get('email'))
+            password = str(request.form.get('password'))
+            password1 = str(request.form.get('password1'))
+            employee_type = str(request.form.get('employee_type'))
 
-            email_found = False #records.find_one({"email": email})
+            print(f"POST Request completed here! ")
+            print(f"{firstname, lastname, email, password, password1}")
+            # found_user = USERS.find_user(email)
 
             if password != password1:
+                print(f"Passwords do not match")
                 message = "Passwords do not match"
-                return redirect('/signup', message=message) 
-            if email_found:
-                message = "Email already exists"
-                return redirect('/signup', message=message)
+                return redirect('/signup')
+
+            # if found_user is not None:
+            #     message = "User already exists"
+            #     return redirect('/signup', message=message)
+            else:
+                name = f"{firstname} {lastname}"
+                password = password.encode('utf-8')
+                hashed_pass = hashlib.sha256(password).hexdigest()
+                worker = db.Worker(name, email, hashed_pass, employee_type, None, None)
+                WORKERS.add_worker(worker)
+                return redirect('/login')
 
         return render_template("auth/signup.html", page_name=page_name)
 
-    @app.route('/sp')
-    def service_portal(page_name="Service Portal"):
-        return render_template("service_portal/portal.html", page_name=page_name)
+    @app.route('/new/ticket', methods=['GET', 'POST'])
+    def new_ticket(page_name=f"New Ticket {id_number}"):
+        if 'name' not in session:
+            return redirect('/login')
+        id_number = IDS.get_current_id('tickets')
 
-    @app.route('/sp/schedule')
-    def service_portal_schedule(page_name="Service Portal Scheduler"):
-        return render_template("service_portal/schedule.html", page_name=page_name)
+        username = session['name']
 
-    @app.route('/new/ticket', methods=['GET','POST'])
-    def new_ticket(id_number=id_number, page_name=f"New Ticket {id_number}"):
-
-        # will need to save the DB information from the webpage
-        # probably using an API request template once the submit button was hit.
-        # will need to get the information from front-end about what information
-        # was on the page.
-        # this function will need to increment the ID Number of the ticket
-        # and render it with the page as immutable.
-
-        # if POST is used, then grab the information from the webpage and then
-        # use DB functions to then make and store the information.
         if request.method == 'POST':
-            # grab information given by frontend, like
-
-            # type
-            ticket_type = str(request.form.get('issueType'))
-
-             # title
+            # title
             ticket_title = str(request.form.get('title'))
-
             # description
             ticket_descript = str(request.form.get('description'))
-           
+            # device OS
+            ticket_os = str(request.form.get('os'))
             # worker
             ticket_worker = str(request.form.get('worker'))
             # device
             ticket_device = str(request.form.get('device'))
-            # client
-            ticket_client = str(request.form.get('client'))
-            # team
-            ticket_team = str(request.form.get('team'))
-            print(f"POST Request completed here! {ticket_descript, ticket_title, ticket_type, ticket_worker, ticket_device, ticket_client, ticket_team}")
-            # use the add_ticket function with all the referenced parameters
-            # add_ticket(id_number, description, title, type, worker, device, client, team)
-            # increment ID number
-            id_number = str(int(id_number) + 1).zfill(3)
+            # device ID
+            device_id = str(request.form.get('device_id'))
 
+            ticket = db.Ticket(ticket_descript, ticket_title, ticket_worker, ticket_os, ticket_device, 'open', None)
+            TICKETS.add_ticket(ticket)
+            IDS.inc_id_count('tickets')  # update the ID number
             return redirect('/view/ticket')
 
-        # otherwise, when GET is used, just render the new ticket html template
+        return render_template("new/create_ticket.html", page_name=page_name, id_number=id_number, username=username)
 
-        if request.method == 'POST':
-        # Process form data and save the ticket to the database
-        # Increment the current page number by one
-            id_number = str(int(id_number) + 1)
-        return render_template("new/create_ticket.html", page_name=page_name, id_number=id_number)
-
-    
     @app.route('/view/ticket', methods=['GET'])
     def view_ticket_list(page_name="View Tickets"):
-        return render_template("view/ticket.html", page_name=page_name, incidents=incidents)
-    
-    @app.route('/view/call', methods=['GET'])
-    def view_call_list(page_name="View Calls"):
-        return render_template("view/call.html", page_name=page_name, calls=calls)
-    
+        if 'name' not in session:
+            return redirect('/login')
+
+        username = session['name']
+
+        incidents = TICKETS.get_all_tickets()
+        incidents = [incident for incident in incidents if incident.status != "closed"]
+        incidents.reverse()
+        return render_template("view/ticket.html", page_name=page_name, incidents=incidents, username=username)
+
+    @app.route('/edit-incident/<incident_id>', methods=['POST'])
+    def edit_incident(incident_id):
+        if 'name' not in session:
+            return redirect('/login')
+
+        data = request.get_json()
+
+        # ticket id
+        ticket_id = data.get('id')
+
+        # status
+        ticket_status = data.get('status')
+
+        print(ticket_id)
+        # name
+        ticket_name = data.get('name')
+        # description
+        ticket_descript = data.get('description')
+        # os
+        ticket_os = data.get('os')
+        # worker
+        ticket_worker = data.get('worker')
+        # device
+        ticket_device = data.get('device')
+
+        ticket = db.Ticket(ticket_descript, ticket_name, ticket_worker, ticket_os, ticket_device, ticket_status, ticket_id)
+        TICKETS.update_ticket(ticket)
+        return redirect('/view/ticket')
+
+
+
+
+
 
     @app.route('/settings')
     def settings(page_name="Settings"):
-        return render_template("/settings/settings.html", page_name=page_name)
-    
+        if 'name' not in session:
+            return redirect('/login')
+
+        username = session['name']
+
+        return render_template("settings/settings.html", page_name=page_name, username=username)
+
     @app.route('/view/kb')
     def knowledgebase(page_name="Knowledge Base"):
-        return render_template("view/knowledgebase.html", page_name=page_name)
+        if 'name' not in session:
+            return redirect('/login')
 
-    
+        username = session['name']
+
+        incidents = TICKETS.get_all_tickets()
+        incidents = [incident for incident in incidents if incident.status != "open"]
+        incidents.reverse()
+
+        return render_template("view/knowledgebase.html", page_name=page_name, username=username, incidents=incidents)
+
     @app.errorhandler(404)
     def page_not_found(e):
-        return render_template('/error/404.html'), 404
+        return render_template('error/404.html'), 404
+
+    @app.errorhandler(500)
+    def page_not_found(e):
+        return render_template('error/404.html'), 500
 
     return app

@@ -1,9 +1,74 @@
 {% extends "sidebar.html" %}
 
+{% block head %}
+    <link rel="stylesheet" href="../../static/css/view_ticket.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+{% endblock %}
 
 {% block content %}
-    <div class="call-list">
-        <h1>Knowledge Base</h1>
-        <p>Work in progress</p>
-    </div>
+
+  <h1>My Knowledge Base</h1>
+  <div>
+		{% for incident in incidents %}
+			<div class="incident-card">
+				<h2>{{ incident.title }}</h2>
+                <p>{{ incident.id_num }}</p>
+				<p>{{ incident.description }}</p>
+				<button class="edit-btn"
+                    data-id="{{ incident.id_num }}"
+                    data-name="{{ incident.title }}"
+                    data-description="{{ incident.description }}"
+                    data-worker="{{ incident.worker }}"
+                    data-device="{{ incident.device }}"
+                    data-client="{{ incident.client }}"
+                    data-team="{{ incident.team }}"
+                    data-status="{{ incident.status }}"
+                >View</button>
+			</div>
+		{% endfor %}
+	</div>
+
+	<div id="edit-modal" style="display:none;">
+		<div class="modal-content">
+		  <h2>Edit Incident</h2>
+		  <form id="edit-form">
+
+            <label for="incident-id">ID:</label>
+            <input type="text" id="incident-id" placeholder="ID" readonly>
+            <br>
+
+			<label for="incident-status">Status:</label>
+			<input style="text-transform: capitalize" type="text" id="incident-status" placeholder="Status" readonly>
+			<br>
+
+			<label for="incident-name">Name:</label>
+			<input type="text" id="incident-name" placeholder="Name" readonly >
+			<br>
+
+			<label for="incident-description">Description:</label>
+			<textarea id="incident-description" placeholder="Description" readonly></textarea>
+			<br>
+
+            <label for="incident-os">OS:</label>
+            <input type="text" id="incident-os" placeholder="OS" readonly>
+            <br>
+
+			<label for="incident-worker">Worker:</label>
+			<input type="text" id="incident-worker" placeholder="Worker" readonly>
+			<br>
+
+			<label for="incident-device">Device:</label>
+			<input type="text" id="incident-device" placeholder="Device" readonly>
+			<br>
+
+
+			<button id="cancel-btn">Cancel</button>
+		  </form>
+		</div>
+	  </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="../../static/js/view_tickets.js"></script>
 {% endblock %}

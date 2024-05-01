@@ -43,13 +43,14 @@
 	margin: 0 auto;
   }
 
+#incident-id,
 #incident-name,
 #incident-description,
+#incident-os,
 #incident-status,
 #incident-worker,
-#incident-device,
-#incident-client,
-#incident-team {
+#incident-device
+{
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -78,6 +79,7 @@
 	border: none;
 	border-radius: 5px;
 	cursor: pointer;
+	margin-top: 20px;
   }
   
   #cancel-btn:hover {

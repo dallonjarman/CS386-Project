@@ -14,6 +14,16 @@ body {
     background-color: #fff;
 }
 
+.container select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin-bottom: 10px;
+}
+
+
+
 h1 {
     text-align: center;
     margin-bottom: 20px;
@@ -29,12 +39,10 @@ label {
     margin-bottom: 5px;
 }
 
-input[type="email"],
+input[type="text"],
 input[type="password"], 
-input[type="username"],
-input[type="firstname"],
-input[type="lastname"],
-input[type="phone"]
+input[type="email"]
+
 {
     width: 92%;
     padding: 10px;

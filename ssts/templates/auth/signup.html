@@ -11,26 +11,29 @@
         <h1>Sign up</h1>
         
         <form action="#" method="POST">
-            <label for="username">Username</label>
-            <input type="username" id="username" name="username" placeholder="Enter your username">
-
             <label for="firstname">First Name</label>
-            <input type="firstname" id="firstname" name="firstname" placeholder="Enter your first name">
+            <input type="text" id="firstname" name="firstname" placeholder="Enter your first name" />
 
             <label for="lastname">Last Name</label>
-            <input type="lastname" id="lastname" name="lastname" placeholder="Enter your last name">
-
-            <label for="phone">Phone Number</label>
-            <input type="phone" id="phone" name="phone" placeholder="Enter your phone number">
+            <input type="text" id="lastname" name="lastname" placeholder="Enter your last name" />
 
             <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" placeholder="youraddress@email.com">
+            <input type="email" id="email" name="email" placeholder="Example@ssts.app" />
 
             <label for="password">Password</label>
-            <input type="password" id="pass" name="password" placeholder="Enter your password">
+            <input type="password" id="pass" name="password" placeholder="Enter your password" />
 
             <label for="password">Confirm Password</label>
-            <input type="password" id="confirm_pass" name="password1" placeholder="Repeat your password">
+            <input type="password" id="confirm_pass" name="password1" placeholder="Repeat your password" />
+
+            <label for="worker_type">Enter your employee title</label>
+            <select id="worker_type" name="worker_type">
+                <option style="display:none" selected disabled value>Select from the following</option>
+                <option value="manager">Manager</option>
+                <option value="it">IT</option>
+                <option value="worker">Worker</option>
+                <option value="client">Client</option>
+            </select>
 
             <button type="submit" id="create"  value="Sign Up">Create account</button>
             <p>Have an account? <a href="/login">Login</a></p>
